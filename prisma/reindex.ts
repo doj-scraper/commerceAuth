@@ -1,4 +1,6 @@
 // reindex.ts — Run when Brand/Model/PartType names change
+import { PrismaClient } from '@prisma/client';
+
 export async function reindexSearchIndex(prisma: PrismaClient) {
   const parts = await prisma.partMaster.findMany({
     include: {

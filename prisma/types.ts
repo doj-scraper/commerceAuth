@@ -1,5 +1,5 @@
 // prisma/types.ts
-import { Decimal } from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 
 export interface CreatePartInput {
   primaryPhoneId: string;
@@ -7,7 +7,7 @@ export interface CreatePartInput {
   qualityId: string;
   compatiblePhoneIds: string[];
   supplier?: string | null;
-  cost?: number | Decimal | null;
-  price?: number | Decimal | null;
+  cost?: number | Prisma.Decimal | null;
+  price?: number | Prisma.Decimal | null;
   initialStock?: number;
 }
