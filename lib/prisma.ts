@@ -8,14 +8,13 @@ if (typeof window === 'undefined') {
   neonConfig.webSocketConstructor = ws;
 }
 
-const env = process.env;
-const connectionString = env.POSTGRES_PRISMA_URL || env.POSTGRES_URL || env.DATABASE_URL!;
-
-const pool = new Pool({ connectionString });
-const adapter = new PrismaNeon(pool as any);
-
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
+const rawConnectionString = process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL || '';
+const connectionString = rawConnectionString.replace(/^"|"$|'/g, '').trim();
+
+export const prisma = globalForPrisma.prisma || new PrismaClient({
+  adapter: new PrismaNeon(new Pool({ connectionString }) as any)
+});
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
