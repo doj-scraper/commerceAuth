@@ -31,16 +31,25 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    const formattedParts = parts.map((part) => ({
-      ...part,
-      // Convert Decimal to cents (integer)
-      price: part.price ? Math.round(Number(part.price) * 100) : null,
-      cost: part.cost ? Math.round(Number(part.cost) * 100) : null,
-    }));
+    const formattedParts = parts.map((part) => {
+      const brandName = part.primaryPhone.model.brand.name;
+      const brand: 'Apple' | 'Samsung' =
+        brandName === 'Apple' || brandName === 'Samsung' ? brandName : 'Apple';
+      return {
+        ...part,
+        brand,
+        // Convert Decimal to cents (integer)
+        price: part.price ? Math.round(Number(part.price) * 100) : 0,
+        cost: part.cost ? Math.round(Number(part.cost) * 100) : null,
+      };
+    });
 
-    return NextResponse.json(formattedParts);
+    return NextResponse.json({ success: true, parts: formattedParts });
   } catch (error) {
     console.error('Error fetching parts:', error);
-    return NextResponse.json({ error: 'Failed to fetch parts' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch parts' },
+      { status: 500 }
+    );
   }
 }
