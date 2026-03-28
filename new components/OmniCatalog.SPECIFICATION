@@ -1,0 +1,418 @@
+# OmniCatalog Component Specification
+
+**Version:** 1.0  
+**Status:** Production  
+**Last Updated:** 2025-Q1  
+**Owned By:** CellTech Frontend Team
+
+-----
+
+## 1. Overview
+
+**OmniCatalog** is a real-time B2B parts discovery interface for CellTech’s wholesale repair parts catalog. It enables independent repair shops to search, filter, and add parts to cart with a single source of truth: an AND-logic omni-search that matches all user-typed terms against a server-indexed text field.
+
+### Design Philosophy
+
+- **Real-Time Search**: Instant filtering as users type (client-side)
+- **Brand Segmentation**: Apple/Samsung as top-level filters (toggle, not dropdown)
+- **Scalable Indexing**: Server pre-computes `searchIndex` to avoid client-side parsing
+- **Accessibility-First**: ARIA labels, keyboard navigation, semantic HTML
+- **Error Resilience**: Loading states, error boundaries, validation of API responses
+
+-----
+
+## 2. Component Boundaries
+
+### Inputs (Props)
+
+None. OmniCatalog is a **page-level component** that owns its own data fetching.
+
+### Outputs (Side Effects)
+
+- **Network**: GET `/api/parts` on mount
+- **Cart Integration**: `handleAddToCart(part)` callback (stub for integration)
+- **Console Logging**: Debug logs when cart action is triggered
+
+### State Tree
+
+```typescript
+{
+  parts: PartMaster[];           // All fetched parts
+  loading: boolean;              // Fetch in-flight
+  error: string | null;          // Fetch error message
+  activeBrand: 'Apple' | 'Samsung';
+  searchQuery: string;           // Raw user input
+  filteredParts: PartMaster[];   // Computed from memoization
+}
+```
+
+-----
+
+## 3. Data Contract: `/api/parts`
+
+### Request
+
+```http
+GET /api/parts
+```
+
+No query parameters. Server should handle pagination separately (see scalability notes below).
+
+### Response Shape
+
+```typescript
+{
+  success: boolean;
+  parts: PartMaster[];
+  error?: string;  // Only present if success === false
+}
+```
+
+### PartMaster Schema
+
+```typescript
+{
+  id: string;                           // UUID
+  sku: string;                          // e.g., "APHONE15PRO-SCR-OEM"
+  partType: {
+    id: string;
+    name: string;                       // e.g., "Screen", "Battery"
+  };
+  quality: {
+    id: string;
+    name: 'OEM' | 'Aftermarket' | 'Refurbished';
+  };
+  price: number;                        // In CENTS (e.g., 1999 = $19.99)
+  stock: number;                        // Available units
+  brand: 'Apple' | 'Samsung';           // MUST match toggle options
+  searchIndex: string;                  // Space-delimited, lowercase, e.g.:
+                                        // "iphone 15 pro screen oem apple"
+}
+```
+
+### searchIndex Examples
+
+|Part                                      |Recommended searchIndex                      |
+|------------------------------------------|---------------------------------------------|
+|OEM Screen for iPhone 15 Pro              |`"iphone 15 pro screen oem apple"`           |
+|Aftermarket Battery for Samsung Galaxy S24|`"samsung galaxy s24 battery aftermarket"`   |
+|Refurbished Charging Port for iPhone 13   |`"iphone 13 charging port refurbished apple"`|
+
+**Rules:**
+
+- All lowercase
+- Space-delimited (no commas or punctuation)
+- Include: model/generation, part type, quality, brand
+- Optionally include: common aliases (e.g., “iphone” for “iPhone”)
+
+-----
+
+## 4. Feature Specification
+
+### 4.1 Brand Toggle
+
+- **UI**: Two-button toggle bar (Apple | Samsung)
+- **Behavior**: Filters `filteredParts` to only parts matching `activeBrand`
+- **Default**: Apple
+- **Accessibility**: `aria-pressed` on active button, `role="group"` on container
+
+### 4.2 Omni-Search
+
+- **Input**: Single text field, auto-focused
+- **Logic**: AND matching
+  - User types: `"15 pro battery"`
+  - Splits to: `["15", "pro", "battery"]`
+  - Matches part if **all three terms** appear in `searchIndex`
+- **Case Sensitivity**: Case-insensitive (queries lowercased before matching)
+- **Partial Matching**: YES (e.g., “15” matches “iphone15”, “i15”)
+- **Debouncing**: None (client-side, no network calls)
+
+### 4.3 Results Display
+
+- **Grid Layout**: Responsive (1 col mobile, 2 col tablet, 3 col desktop)
+- **Card Structure**:
+  - SKU badge (cyan pill)
+  - Stock status (green/“IN STOCK” or red/“OUT OF STOCK”)
+  - Part name (Quality + Type)
+  - Wholesale price (in USD, cents → dollars)
+  - “Add to Cart” button (disabled if stock === 0)
+
+### 4.4 Empty States
+
+1. **Loading**: Spinner + “Loading catalog…” (shown while `loading === true`)
+1. **Network Error**: Error message + “Retry” button (shown when `error !== null`)
+1. **No Results**: Contextual message + “Clear search” button (shown when `filteredParts.length === 0` and search is active)
+
+-----
+
+## 5. Interactions & Workflows
+
+### 5.1 User Types in Search
+
+```
+User Input: "15 pro"
+→ searchQuery state updated
+→ useMemo re-runs filter
+→ filteredParts re-computed
+→ Grid re-renders (instant, no network call)
+```
+
+### 5.2 User Adds to Cart
+
+```
+User clicks "Add to Cart"
+→ handleAddToCart(part) invoked
+→ TODO: Dispatch to cart context/Zustand store
+→ TODO: Validate MOQ (5 units minimum)
+→ TODO: Show toast notification
+→ Currently: logs to console + alert()
+```
+
+### 5.3 Network Failure
+
+```
+Component mounts
+→ fetch('/api/parts') fails (network error, 500, malformed response)
+→ setState({ error: "...", loading: false })
+→ Error UI rendered
+→ User clicks "Retry" → window.location.reload()
+```
+
+-----
+
+## 6. Performance Characteristics
+
+### Client-Side Filtering
+
+- **Algorithm**: O(n) per keystroke (n = number of parts)
+- **Optimization**: `useMemo` prevents re-computation if `parts`, `activeBrand`, or `searchQuery` haven’t changed
+- **Scalability Limit**: ~5,000 parts before perceived lag on modern machines
+- **Recommendation**: For catalogs > 10,000 SKUs, migrate to server-side filtering (see Section 7)
+
+### Initial Load
+
+- **Fetch Time**: Depends on `/api/parts` performance
+- **No Pagination**: Currently, all parts fetched on mount. For large catalogs, implement pagination or lazy-loading.
+
+-----
+
+## 7. Scalability Roadmap
+
+### Phase 1 (Current)
+
+- Client-side filter for up to ~5,000 parts
+- All parts fetched on mount (single request)
+- No pagination
+
+### Phase 2 (Recommended for CellTech v2)
+
+- **Server-Side Filtering**:
+  
+  ```http
+  GET /api/parts?brand=Apple&q=15%20pro
+  ```
+  
+  Server returns only matching parts. Client requests subset.
+- **Pagination**:
+  
+  ```http
+  GET /api/parts?brand=Apple&limit=50&offset=0
+  ```
+- **Benefits**:
+  - Instant search for large catalogs
+  - Reduced initial payload
+  - Can index full-text search DB (pg_trgm, Elasticsearch)
+
+### Phase 3 (B2B Platform Maturity)
+
+- Elasticsearch or Algolia integration for fuzzy matching, facets, typo tolerance
+- Typeahead suggestions (popular searches, recent filters)
+- Search analytics tracking
+
+-----
+
+## 8. Integration Points
+
+### 8.1 Cart Context/Store
+
+**TODO**: Replace the `handleAddToCart` stub with:
+
+```typescript
+// Example with Zustand
+import { useCartStore } from '@/stores/cart';
+
+const addToCart = useCartStore((state) => state.addItem);
+
+const handleAddToCart = useCallback((part: PartMaster) => {
+  // Validate MOQ
+  if (part.stock < 5) {
+    showToast('Minimum order: 5 units');
+    return;
+  }
+  
+  addToCart({
+    partId: part.id,
+    sku: part.sku,
+    quantity: 5, // OR: let user choose qty in modal
+    price: part.price,
+  });
+  
+  showToast(`Added ${part.sku} to cart`);
+}, []);
+```
+
+### 8.2 Toast Notifications
+
+Use Sonner, React Hot Toast, or equivalent:
+
+```typescript
+import { toast } from 'sonner';
+
+toast.success(`Added ${part.sku} to cart`);
+```
+
+### 8.3 Analytics
+
+Optional: Track search queries, filter toggles, cart adds:
+
+```typescript
+const handleAddToCart = useCallback((part: PartMaster) => {
+  analytics.track('part_added_to_cart', {
+    sku: part.sku,
+    price: part.price,
+    brand: activeBrand,
+  });
+  // ...
+}, [activeBrand]);
+```
+
+-----
+
+## 9. Accessibility Checklist
+
+- [x] Search input has `aria-label`
+- [x] Brand toggle has `aria-pressed` and `role="group"`
+- [x] “Add to Cart” button has descriptive `aria-label` including SKU
+- [x] Empty state messaging is clear
+- [x] Keyboard navigation: Tab through toggle and button, Enter to select
+- [x] Color contrast: Cyan (#00E5C0) on dark background meets WCAG AA
+- [ ] TODO: Test with screen reader (NVDA, VoiceOver)
+- [ ] TODO: Test keyboard-only navigation
+
+-----
+
+## 10. Testing Strategy
+
+### Unit Tests (Jest)
+
+```typescript
+// Filter logic
+it('filters parts by brand', () => {
+  const parts = [{ brand: 'Apple', ... }, { brand: 'Samsung', ... }];
+  // Assert only Apple parts returned when activeBrand='Apple'
+});
+
+it('filters by AND logic', () => {
+  const part = { searchIndex: 'iphone 15 pro screen' };
+  // "15 screen" → match ✓
+  // "15 ipad" → no match ✗
+});
+```
+
+### Integration Tests (Playwright)
+
+```typescript
+it('loads parts and allows search', async ({ page }) => {
+  await page.goto('/catalog');
+  await expect(page.locator('[aria-label="Search"]')).toBeFocused();
+  await page.fill('[aria-label="Search"]', '15 pro');
+  const results = await page.locator('[data-testid="part-card"]').count();
+  expect(results).toBeGreaterThan(0);
+});
+```
+
+### E2E Test Coverage
+
+1. ✅ Component mounts, fetches parts
+1. ✅ Brand toggle filters correctly
+1. ✅ Search filters with AND logic
+1. ✅ Empty state when no results
+1. ✅ Error state on network failure
+1. ✅ “Add to Cart” button clickable and logs action
+
+-----
+
+## 11. Known Limitations & Future Work
+
+|Item                    |Priority|Notes                                                            |
+|------------------------|--------|-----------------------------------------------------------------|
+|**Server-side search**  |High    |For catalogs > 10K parts, implement pagination + server filtering|
+|**Cart integration**    |High    |Replace `handleAddToCart` stub with real Zustand/Context dispatch|
+|**Typeahead**           |Medium  |Suggest popular searches, common part types                      |
+|**Filters beyond brand**|Medium  |Add facets: Quality (OEM/Aftermarket), Price range, Stock status |
+|**Saved searches**      |Low     |Let users bookmark favorite searches (localStorage → DB)         |
+|**Export to CSV**       |Low     |Download filtered results for bulk operations                    |
+|**Advanced sort**       |Low     |Sort by price, stock, relevance (default: relevance)             |
+
+-----
+
+## 12. Rollout Plan
+
+### Pre-Launch Checklist
+
+- [x] TypeScript types validated
+- [x] Error handling tested
+- [x] Loading state visible
+- [ ] Cart integration complete
+- [ ] Accessibility audit with screen reader
+- [ ] Performance profiled (initial load < 2s, search < 100ms)
+- [ ] API contract finalized with backend team
+
+### Launch Strategy
+
+1. **Beta**: Invite 5-10 power users, gather feedback on search UX
+1. **Soft Launch**: Enable for 25% of users, monitor error rates
+1. **Full Rollout**: Gradual expansion to 100% of platform
+
+-----
+
+## 13. Support & Debugging
+
+### Common Issues
+
+**Q: Search returns no results for a part I know exists**
+A: Check `searchIndex` on the backend. E.g., if user searches “battery” but `searchIndex` is “iphone 15 screen”, no match. Audit seed data.
+
+**Q: “Add to Cart” button does nothing**
+A: It’s a stub. See Section 8.1 for integration steps.
+
+**Q: Component is slow with 50K parts**
+A: Current implementation is client-side filtered. Migrate to server-side search (Section 7, Phase 2).
+
+### Debug Mode
+
+Add to component for development:
+
+```typescript
+useEffect(() => {
+  console.log('[OmniCatalog Debug]', {
+    partsCount: state.parts.length,
+    filteredCount: filteredParts.length,
+    activeBrand,
+    searchQuery,
+  });
+}, [state.parts, filteredParts, activeBrand, searchQuery]);
+```
+
+-----
+
+## 14. References & Related Docs
+
+- **CellTech Architecture**: See `/docs/ARCHITECTURE.md` for full system design
+- **API Docs**: See `/api/parts` endpoint spec in backend README
+- **Zustand Cart Store**: See `/stores/cart.ts` for addItem interface
+- **Design System**: Tailwind config in `tailwind.config.ts` (dark theme, cyan accent)
+
+-----
+
+**END OF SPECIFICATION**
