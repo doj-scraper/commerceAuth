@@ -39,18 +39,8 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(formattedParts);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching parts:', error);
-    
-    // Debug info
-    const envKeys = Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES'));
-
-    return NextResponse.json({ 
-      error: 'Failed to fetch parts', 
-      details: error.message, 
-      stack: String(error.stack),
-      envKeys,
-      dbUrlStart: process.env.DATABASE_URL?.substring(0, 15)
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch parts' }, { status: 500 });
   }
 }

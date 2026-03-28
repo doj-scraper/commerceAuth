@@ -14,7 +14,7 @@ const rawConnectionString = process.env.POSTGRES_PRISMA_URL || process.env.POSTG
 const connectionString = rawConnectionString.replace(/^"|"$|'/g, '').trim();
 
 export const prisma = globalForPrisma.prisma || new PrismaClient({
-  adapter: new PrismaNeon(new Pool({ connectionString }) as any)
+  adapter: new PrismaNeon({ connectionString })
 });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
