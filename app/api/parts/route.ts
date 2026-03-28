@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(formattedParts);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching parts:', error);
-    return NextResponse.json({ error: 'Failed to fetch parts' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch parts', details: error.message, stack: error.stack }, { status: 500 });
   }
 }
