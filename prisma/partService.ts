@@ -1,4 +1,4 @@
-Partservice. Ts // partService.ts
+// partService.ts
 import { PrismaClient, Prisma, PartMaster } from '@prisma/client';
 import { generateSku } from './skuGenerator';
 import { CreatePartInput } from './types';
