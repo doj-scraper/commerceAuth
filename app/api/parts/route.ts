@@ -49,7 +49,8 @@ export async function GET(req: NextRequest) {
       error: 'Failed to fetch parts', 
       details: error.message, 
       stack: String(error.stack),
-      envKeys
+      envKeys,
+      dbUrlStart: process.env.DATABASE_URL?.substring(0, 15)
     }, { status: 500 });
   }
 }
