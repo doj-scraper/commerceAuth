@@ -1,0 +1,41 @@
+{
+  "name": "commerce-auth",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "@prisma/adapter-neon": "^6.2.1",
+    "@prisma/client": "^6.2.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
+    "lucide-react": "^0.474.0",
+    "next": "15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.6.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@prisma/adapter-pg": "^6.2.1",
+    "@types/node": "^20.17.16",
+    "@types/pg": "^8.11.11",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@types/ws": "^8.5.14",
+    "postcss": "^8.5.1",
+    "prisma": "^6.2.1",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

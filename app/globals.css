@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #070A12;
+  --foreground: #F2F5FA;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+}
+
+.heading-display {
+  font-family: var(--font-sora), sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 0.95;
+}
+
+.text-micro {
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.product-card {
+  background: #111725;
+  border: 1px solid rgba(167, 177, 198, 0.1);
+  border-radius: 0.625rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.product-card:hover {
+  border-color: #00E5C0;
+  box-shadow: 0 0 20px rgba(0, 229, 192, 0.1);
+}
