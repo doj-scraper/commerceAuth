@@ -35,28 +35,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 border-b border-ct-text-secondary/10 bg-ct-bg/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-ct-accent flex items-center justify-center font-bold text-ct-bg italic">CT</div>
-            <span className="heading-display text-xl tracking-tighter">CELL<span className="text-ct-accent">TECH</span></span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-ct-text-secondary">
-            <Link href="/catalog" className="hover:text-ct-accent transition-colors">Catalog</Link>
-            <Link href="#" className="hover:text-ct-accent transition-colors">Pricing</Link>
-            <Link href="#" className="hover:text-ct-accent transition-colors">Support</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm">Log In</Button>
-            <Link href="/catalog">
-              <Button size="sm">B2B Portal</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <div className="flex flex-col">
       {/* Hero Section */}
       <section className="relative pt-40 pb-24 px-6 lg:px-12 max-w-7xl mx-auto overflow-hidden">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[500px] h-[500px] bg-ct-accent/10 rounded-full blur-[120px] pointer-events-none" />
@@ -119,22 +98,6 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="mt-auto py-12 px-6 lg:px-12 border-t border-ct-text-secondary/10 text-ct-text-secondary">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 grayscale opacity-50">
-            <div className="w-6 h-6 rounded bg-ct-text-secondary flex items-center justify-center font-bold text-ct-bg italic text-[10px]">CT</div>
-            <span className="heading-display text-sm tracking-tighter">CELLTECH</span>
-          </div>
-          <p className="text-xs tracking-widest uppercase">© 2026 CellTech B2B Solutions. All rights reserved.</p>
-          <div className="flex gap-6 text-xs uppercase tracking-widest font-mono">
-            <Link href="#" className="hover:text-ct-accent transition-all">Privacy</Link>
-            <Link href="#" className="hover:text-ct-accent transition-all">Terms</Link>
-            <Link href="#" className="hover:text-ct-accent transition-all">Cookies</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

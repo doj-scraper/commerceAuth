@@ -140,10 +140,10 @@ export default function OmniCatalog() {
   // =========================================================================
   if (state.loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-gray-100 p-8 flex items-center justify-center">
+      <div className="pt-20 pb-12 px-6 lg:px-12 max-w-7xl mx-auto flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#00E5C0] mb-4"></div>
-          <p className="text-gray-400">Loading catalog&hellip;</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-ct-accent mb-4"></div>
+          <p className="text-ct-text-secondary">Loading catalog&hellip;</p>
         </div>
       </div>
     );
@@ -154,15 +154,15 @@ export default function OmniCatalog() {
   // =========================================================================
   if (state.error) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-gray-100 p-8 flex items-center justify-center">
-        <div className="max-w-md text-center">
+      <div className="pt-20 pb-12 px-6 lg:px-12 max-w-7xl mx-auto flex items-center justify-center min-h-[60vh]">
+        <div className="max-w-md text-center p-8 rounded-2xl bg-ct-bg-secondary/50 border border-red-500/20">
           <div className="text-red-400 text-lg font-bold mb-2">
             ⚠️ Error Loading Catalog
           </div>
-          <p className="text-gray-400 mb-6 text-sm">{state.error}</p>
+          <p className="text-ct-text-secondary mb-6 text-sm">{state.error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-[#00E5C0] text-black px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-white transition-colors rounded-sm"
+            className="bg-ct-accent text-ct-bg px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-ct-text transition-colors rounded-sm"
           >
             Retry
           </button>
@@ -175,11 +175,22 @@ export default function OmniCatalog() {
   // RENDER: Main UI
   // =========================================================================
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-gray-100 p-8 font-sans selection:bg-[#00E5C0] selection:text-black">
+    <div className="pt-32 pb-12 px-6 lg:px-12 max-w-7xl mx-auto selection:bg-ct-accent selection:text-ct-bg">
+      <header className="mb-10 text-center">
+        <p className="text-micro text-ct-accent mb-3 tracking-widest">CellTech B2B Explorer</p>
+        <h1 className="heading-display text-4xl sm:text-5xl lg:text-6xl text-ct-text mb-4">
+          PARTS <span className="text-ct-accent">CATALOG</span>
+        </h1>
+        <p className="text-ct-text-secondary text-sm lg:text-base max-w-2xl mx-auto leading-relaxed">
+          Access our complete inventory of original and high-quality replacement parts. 
+          Use the command search to locate specific components.
+        </p>
+      </header>
+
       {/* Brand Toggle */}
       <div className="flex justify-center mb-12">
         <div
-          className="flex p-1 bg-gray-900 border border-gray-800 rounded-sm"
+          className="flex p-1 bg-ct-bg-secondary border border-ct-text-secondary/10 rounded-lg shadow-dashboard"
           role="group"
           aria-label="Filter by brand"
         >
@@ -188,10 +199,10 @@ export default function OmniCatalog() {
               key={brand}
               onClick={() => setActiveBrand(brand)}
               aria-pressed={activeBrand === brand}
-              className={`px-8 py-2 text-sm uppercase tracking-widest font-bold transition-colors rounded-sm ${
+              className={`px-8 py-2.5 text-sm uppercase tracking-widest font-bold transition-all rounded-md ${
                 activeBrand === brand
-                  ? 'bg-[#00E5C0] text-black'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'bg-ct-accent text-ct-bg shadow-glow'
+                  : 'text-ct-text-secondary hover:text-ct-text hover:bg-ct-text-secondary/5'
               }`}
             >
               {brand}
@@ -202,24 +213,29 @@ export default function OmniCatalog() {
 
       {/* Search Bar */}
       <div className="max-w-3xl mx-auto mb-12">
-        <input
-          type="text"
-          autoFocus
-          placeholder="Search generation, part, or SKU (e.g. '15 Pro Battery')..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          aria-label="Search parts catalog"
-          className="w-full bg-gray-900 border border-gray-700 text-white px-6 py-5 text-lg focus:outline-none focus:border-[#00E5C0] focus:ring-1 focus:ring-[#00E5C0] rounded-sm transition-all placeholder:text-gray-600"
-        />
-        <div className="mt-2 text-xs text-gray-500 font-mono tracking-wider uppercase">
+        <div className="relative group">
+          <input
+            type="text"
+            autoFocus
+            placeholder="Search generation, part, or SKU (e.g. '15 Pro Battery')..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search parts catalog"
+            className="w-full bg-ct-bg-secondary/80 border border-ct-text-secondary/20 text-ct-text px-6 py-5 text-lg focus:outline-none focus:border-ct-accent focus:ring-1 focus:ring-ct-accent rounded-xl transition-all placeholder:text-ct-text-secondary/40 shadow-dashboard"
+          />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-ct-bg px-2 py-1 rounded text-xs text-ct-text-secondary font-mono border border-ct-text-secondary/20">
+            /
+          </div>
+        </div>
+        <div className="mt-4 text-center text-xs text-ct-text-secondary font-mono tracking-wider uppercase">
           {filteredParts.length} Results Found
         </div>
       </div>
 
       {/* Empty State */}
       {filteredParts.length === 0 && !state.loading && (
-        <div className="max-w-7xl mx-auto text-center py-16">
-          <div className="text-gray-500 text-lg">
+        <div className="max-w-3xl mx-auto text-center py-16 px-6 border border-dashed border-ct-text-secondary/20 rounded-2xl bg-ct-bg-secondary/30">
+          <div className="text-ct-text-secondary text-lg mb-4">
             {searchQuery.trim()
               ? `No ${activeBrand} parts match "${searchQuery}"`
               : `No ${activeBrand} parts available`}
@@ -227,7 +243,7 @@ export default function OmniCatalog() {
           {searchQuery.trim() && (
             <button
               onClick={() => setSearchQuery('')}
-              className="mt-4 text-[#00E5C0] hover:underline text-sm"
+              className="text-ct-accent hover:text-ct-text transition-colors text-sm font-semibold tracking-wide uppercase"
             >
               Clear search
             </button>
@@ -236,23 +252,23 @@ export default function OmniCatalog() {
       )}
 
       {/* Parts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredParts.map((part) => (
           <div
             key={part.id}
-            className="bg-gray-900 border border-gray-800 p-6 flex flex-col justify-between rounded-sm hover:border-gray-600 transition-colors group"
+            className="product-card p-6 flex flex-col justify-between group"
           >
             {/* Header */}
             <div className="mb-6">
               <div className="flex justify-between items-start mb-4 gap-2">
-                <span className="font-mono text-xs text-[#00E5C0] bg-[#00E5C0]/10 px-2 py-1 uppercase tracking-widest flex-shrink-0">
+                <span className="font-mono text-xs text-ct-accent bg-ct-accent/10 border border-ct-accent/20 px-2 py-1 uppercase tracking-widest flex-shrink-0 rounded-sm">
                   {part.sku}
                 </span>
                 <span
-                  className={`text-[10px] font-mono uppercase px-2 py-1 flex-shrink-0 ${
+                  className={`text-[10px] font-mono uppercase px-2 py-1 flex-shrink-0 rounded-sm ${
                     part.stock > 0
-                      ? 'text-green-400 border border-green-400/30'
-                      : 'text-red-400 border border-red-400/30'
+                      ? 'text-ct-accent border border-ct-accent/30 bg-ct-accent/5'
+                      : 'text-red-400 border border-red-400/30 bg-red-400/5'
                   }`}
                 >
                   {part.stock > 0 ? `${part.stock} IN STOCK` : 'OUT OF STOCK'}
@@ -260,18 +276,18 @@ export default function OmniCatalog() {
               </div>
 
               {/* Part Name */}
-              <h3 className="text-lg font-bold text-white mb-1">
+              <h3 className="text-lg font-bold text-ct-text mb-1 line-clamp-2">
                 {part.quality.name} {part.partType.name}
               </h3>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between items-end pt-4 border-t border-gray-800">
+            <div className="flex justify-between items-end pt-4 border-t border-ct-text-secondary/10 mt-auto">
               <div>
-                <span className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">
+                <span className="block text-[10px] text-ct-text-secondary uppercase tracking-widest mb-1">
                   Wholesale
                 </span>
-                <span className="font-mono text-xl font-bold text-white">
+                <span className="font-mono text-xl font-bold text-ct-text group-hover:text-ct-accent transition-colors">
                   ${(part.price / 100).toFixed(2)}
                 </span>
               </div>
@@ -280,7 +296,7 @@ export default function OmniCatalog() {
                 onClick={() => handleAddToCart(part)}
                 disabled={part.stock === 0}
                 aria-label={`Add ${part.quality.name} ${part.partType.name} (SKU: ${part.sku}) to cart`}
-                className="bg-[#00E5C0] text-black px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
+                className="bg-ct-accent text-ct-bg px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-md disabled:hover:shadow-none"
               >
                 Add to Cart
               </button>
