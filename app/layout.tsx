@@ -1,30 +1,17 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Sora, Inter, IBM_Plex_Mono } from "next/font/google";
+import type { CSSProperties } from "react";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Header } from "../components/layout/Header";
 import { Footer } from "../components/layout/Footer";
-
-const sora = Sora({
-  subsets: ["latin"],
-  variable: "--font-sora",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  weight: ["400", "500", "600"],
-  subsets: ["latin"],
-  variable: "--font-ibm-plex-mono",
-});
 
 export const metadata: Metadata = {
   title: "CellTech B2B ERP",
   description: "Wholesale Cellphone Parts Distribution Platform",
 };
+
+export const dynamic = 'force-dynamic';
 
 export default function RootLayout({
   children,
@@ -32,13 +19,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable} ${ibmPlexMono.variable}`}>
+    <html
+      lang="en"
+      style={
+        {
+          '--font-sora': 'system-ui, sans-serif',
+          '--font-inter': 'system-ui, sans-serif',
+          '--font-ibm-plex-mono': 'ui-monospace, SFMono-Regular, monospace',
+        } as CSSProperties
+      }
+      >
       <body className="bg-ct-bg text-ct-text font-inter antialiased flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <ClerkProvider
+          appearance={{
+            variables: {
+              colorPrimary: '#00E5C0',
+              colorBackground: '#070A12',
+              colorText: '#F2F5FA',
+              colorInputBackground: '#0C101A',
+              colorInputText: '#F2F5FA',
+              colorBorder: 'rgba(167, 177, 198, 0.14)',
+              colorDanger: '#F87171',
+              borderRadius: '1rem',
+            },
+          }}
+        >
+          <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </ClerkProvider>
       </body>
     </html>
   );

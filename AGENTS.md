@@ -1,53 +1,38 @@
+# Repository Guidelines
 
-System Directive: CellTech B2B ERP & Catalog Initialization
+## Project Structure
+- `app/` contains the Next.js App Router entry points, including the landing page, catalog, features, auth routes, and API routes.
+- `components/` holds shared UI pieces. Keep catalog, layout, auth-adjacent, and utility components here instead of duplicating them in pages.
+- `lib/` contains shared helpers such as `lib/prisma.ts` and common utilities.
+- `prisma/` holds the database schema, seed script, and catalog generation helpers. Treat it as the source of truth for data modeling.
+- `USEFULUI/` is local reference material only. Do not treat it as primary application code or commit its contents.
 
+## Build and Validation
+- `npm run dev` starts the local Next.js development server.
+- `npm run build` creates the production build.
+- `npm run start` runs the built app locally.
+- `npm run lint` runs ESLint across the repo.
+- `npx tsc --noEmit` validates the TypeScript program.
+- `npx next build --webpack` is the preferred production validation check in this repo.
 
-Role: You are an Expert Full-Stack Next.js Developer and Enterprise Database Architect.
+## Coding Style
+- Use TypeScript, 2-space indentation, and functional React components.
+- Prefer PascalCase for components, camelCase for variables and functions, and lowercase route folder names that follow Next.js conventions.
+- Keep server-only logic in route handlers, Prisma helpers, or other `lib/` modules.
+- Keep UI code in `app/` and `components/`.
+- Follow the existing CellTech visual system: neutral surfaces, green accent, compact industrial typography, and restrained motion.
 
-Skills: Use the skills related to neon, postgresql, vercel, github . There are skills. Design and UI. 
+## Auth and Commerce Notes
+- Clerk is wired through `ClerkProvider`, `proxy.ts`, sign-in/sign-up routes, and server-side `auth()` checks.
+- Stripe checkout and order history are protected server-side and depend on authenticated sessions.
+- Neon and Prisma remain the system of record for catalog, cart, and order persistence.
 
-Context: We are buildiing the database for a wholesale cellphone parts distribution platform. We use Next.js (App Router), Prisma, Neon (PostgreSQL), Clerk for auth, and Tailwind CSS.
+## Testing and Review
+- Verify UI changes with lint, typecheck, and production build before claiming completion.
+- Prefer browser QA for mobile or layout-sensitive work.
+- If you change auth, checkout, or database behavior, validate the actual flow end to end.
 
-Design System: Use UI.md for design system. 
-
-Execution Steps:
-Phase 1: Database Initialization
- * Read the files in the prisma dir within the project directory (skuGenerator.ts, types.ts, seed.ts, etc etc)  in the current directory to understand our database logic. 
-
- * Use your terminal execution skills to run: npx prisma db push followed by npx prisma db seed.
-
- * Verify the seed executed successfully and the Neon database is populated.
-
-
-Phase 2: API Scaffolding (The Catalog Engine)
-
- * Create a new API route: app/api/parts/route.ts.
-
- * Write a GET handler that fetches parts from the PartMaster table.
-
- * Critical Query Logic: The API must support filtering by searchIndex (using Prisma's contains or search), Brand, Model, and Quality. It must include the
- compatibilities.phone relation so the frontend knows which devices the part fits.
-
- * Ensure prices are returned as integers (cents) as stored in the DB.
-
-Phase 3: Frontend UI (The Explorer)
- * Create the main catalog page: app/(shop)/catalog/page.tsx (or equivalent).
-
- * Build a highly functional, dense data-grid or list view for the parts. This will be used for both front and backend purposes. At the moment it will be used for testing of integration, as well as components design. Use UI.md and any skills you have for building the search and product catalog out. 
-
-
- * Component Requirements:
-
-   * A Command Search Bar at the top.
-
-   * A Sidebar for taxonomy filters (Brand, Bucket, Quality).
-
-   * Rows/Cards displaying: The Golden SKU (in font-mono), Name, Quality Badge, Price (formatted from cents to USD), and Stock Level.
-
-   * An "Add to Cart" button
-
- * Strictly adhere to the design system rules outlined in the UI.md. No consumer-style bubbly UI.
-
-Output: Do not ask for permission between phases. Execute the terminal commands, scaffold the API, build the UI, and report back when the Catalog Explorer is fully functional on localhost:3000.
-
-
+## Commit Guidance
+- Use concise conventional commit prefixes such as `feat:`, `fix:`, `docs:`, and `style:`.
+- Keep commits focused on one user-facing change.
+- Pull requests should summarize the change and list validation steps.
