@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, Command, X, ShoppingCart, ArrowRight } from 'lucide-react';
+import { Search, Command, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { AddToCartButton } from '@/components/cart/AddToCartButton';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -167,12 +168,6 @@ function OmniCatalog() {
     });
   }, [state.parts, activeBrand, searchQuery]);
 
-  // 3. Cart Handler (Placeholder for Integration)
-  const handleAddToCart = useCallback((part: PartMaster) => {
-    console.log('[OmniCatalog] Add to cart:', part.sku);
-    alert(`Added ${part.sku} to cart (implement cart handler)`);
-  }, []);
-
   // =========================================================================
   // RENDER: Loading State
   // =========================================================================
@@ -324,7 +319,7 @@ function OmniCatalog() {
       {/* Parts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredParts.map((part) => (
-          <PartCard key={part.id} part={part} onAddToCart={handleAddToCart} />
+          <PartCard key={part.id} part={part} />
         ))}
       </div>
     </div>
@@ -332,7 +327,7 @@ function OmniCatalog() {
 }
 
 // Part Card Component
-function PartCard({ part, onAddToCart }: { part: PartMaster; onAddToCart: (part: PartMaster) => void }) {
+function PartCard({ part }: { part: PartMaster }) {
   const qualityColors: Record<string, string> = {
     'Original': 'bg-ct-accent/10 text-ct-accent border-ct-accent/20',
     'OEM': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -379,15 +374,7 @@ function PartCard({ part, onAddToCart }: { part: PartMaster; onAddToCart: (part:
             </p>
           </div>
           
-          <Button
-            onClick={() => onAddToCart(part)}
-            disabled={part.stock === 0}
-            size="sm"
-            className="h-10 px-4"
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Add
-          </Button>
+          <AddToCartButton partId={part.id} stock={part.stock} className="h-10 px-4" />
         </div>
       </div>
     </div>

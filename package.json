@@ -6,13 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.0.7",
     "@neondatabase/serverless": "^0.10.4",
     "@prisma/adapter-neon": "^6.2.1",
     "clsx": "^2.1.1",
@@ -21,6 +22,8 @@
     "next": "^16.2.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "stripe": "^17.7.0",
+    "svix": "^1.72.0",
     "tailwind-merge": "^2.6.0",
     "ws": "^8.18.0"
   },
@@ -33,6 +36,8 @@
     "@types/react-dom": "^19.0.3",
     "@types/ws": "^8.5.14",
     "autoprefixer": "^10.4.27",
+    "eslint": "^9.38.0",
+    "eslint-config-next": "^16.2.1",
     "postcss": "^8.5.8",
     "prisma": "^7.6.0",
     "tailwindcss": "^3.4.19",

@@ -1,12 +1,14 @@
 'use client';
 
 import { startTransition, useDeferredValue, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Filter, Package2, Search } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { formatCurrency } from '@/lib/utils';
+import { addToCart } from '@/app/actions/cart.actions';
 
 type FacetOption = {
   value: string;
@@ -86,6 +88,7 @@ function qualityVariant(name: string) {
 }
 
 export function CatalogExplorer() {
+  const router = useRouter();
   const [parts, setParts] = useState<PartRecord[]>([]);
   const [filters, setFilters] = useState(emptyFilters);
   const [search, setSearch] = useState('');
@@ -165,8 +168,16 @@ export function CatalogExplorer() {
     setQuality('');
   }
 
-  function handleAddToCart(partId: string) {
+  async function handleAddToCart(partId: string) {
+    const result = await addToCart(partId, 1);
+    if (!result.success) {
+      window.alert(result.error || 'Failed to add item to cart');
+      setActiveCartPartId(null);
+      return;
+    }
+
     setActiveCartPartId(partId);
+    router.refresh();
 
     window.setTimeout(() => {
       setActiveCartPartId((current) => (current === partId ? null : current));

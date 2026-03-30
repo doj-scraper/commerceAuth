@@ -15,7 +15,6 @@ import {
   Database,
   Truck
 } from 'lucide-react';
-import { Button } from '../components/ui/Button';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -126,7 +125,7 @@ export default function LandingPage() {
           </form>
           
           <p className="mt-3 text-xs text-ct-text-secondary/60">
-            Try: "iPhone 15 Pro Battery", "Galaxy S24 Screen", or SKU "AI-IP15PR-1A-OR"
+            Try: &quot;iPhone 15 Pro Battery&quot;, &quot;Galaxy S24 Screen&quot;, or SKU &quot;AI-IP15PR-1A-OR&quot;
           </p>
         </div>
 
