@@ -1,14 +1,14 @@
 'use client';
 
-import { startTransition, useDeferredValue, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Filter, Package2, Search } from 'lucide-react';
+import { forwardRef, startTransition, useDeferredValue, useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { CircleAlert, Package2, Search, Sparkles, X } from 'lucide-react';
 
+import { addToCart } from '@/app/actions/cart.actions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { formatCurrency } from '@/lib/utils';
-import { addToCart } from '@/app/actions/cart.actions';
 
 type FacetOption = {
   value: string;
@@ -64,6 +64,11 @@ type PartsResponse = {
   error?: string;
 };
 
+type NoticeState = {
+  tone: 'success' | 'error';
+  message: string;
+};
+
 const emptyFilters = {
   brands: [] as FacetOption[],
   buckets: [] as FacetOption[],
@@ -88,18 +93,67 @@ function qualityVariant(name: string) {
 }
 
 export function CatalogExplorer() {
+  const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const [parts, setParts] = useState<PartRecord[]>([]);
   const [filters, setFilters] = useState(emptyFilters);
-  const [search, setSearch] = useState('');
-  const [brand, setBrand] = useState('');
-  const [bucket, setBucket] = useState('');
-  const [quality, setQuality] = useState('');
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
+  const [brand, setBrand] = useState(searchParams.get('brand') ?? '');
+  const [model, setModel] = useState(searchParams.get('model') ?? '');
+  const [bucket, setBucket] = useState(searchParams.get('bucket') ?? '');
+  const [quality, setQuality] = useState(searchParams.get('quality') ?? '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<NoticeState | null>(null);
   const [activeCartPartId, setActiveCartPartId] = useState<string | null>(null);
+  const [requestVersion, setRequestVersion] = useState(0);
 
   const deferredSearch = useDeferredValue(search);
+  const totalBrandCount = filters.brands.reduce((sum, option) => sum + option.count, 0);
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') ?? '');
+    setBrand(searchParams.get('brand') ?? '');
+    setModel(searchParams.get('model') ?? '');
+    setBucket(searchParams.get('bucket') ?? '');
+    setQuality(searchParams.get('quality') ?? '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (search.trim()) {
+      params.set('search', search.trim());
+    }
+
+    if (brand) {
+      params.set('brand', brand);
+    }
+
+    if (model) {
+      params.set('model', model);
+    }
+
+    if (bucket) {
+      params.set('bucket', bucket);
+    }
+
+    if (quality) {
+      params.set('quality', quality);
+    }
+
+    const nextQuery = params.toString();
+    const currentQuery = searchParams.toString();
+
+    if (nextQuery === currentQuery) {
+      return;
+    }
+
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [brand, bucket, model, pathname, quality, router, search, searchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -111,6 +165,10 @@ export function CatalogExplorer() {
 
     if (brand) {
       params.set('brand', brand);
+    }
+
+    if (model) {
+      params.set('model', model);
     }
 
     if (bucket) {
@@ -157,26 +215,63 @@ export function CatalogExplorer() {
     void loadParts();
 
     return () => controller.abort();
-  }, [brand, bucket, deferredSearch, quality]);
+  }, [brand, bucket, deferredSearch, model, quality, requestVersion]);
 
-  const activeFilterCount = [brand, bucket, quality].filter(Boolean).length + (search.trim() ? 1 : 0);
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        const target = event.target as HTMLElement | null;
+
+        if (target?.tagName !== 'INPUT' && target?.tagName !== 'TEXTAREA' && target?.tagName !== 'SELECT') {
+          event.preventDefault();
+          searchInputRef.current?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (!notice) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setNotice(null);
+    }, 2400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [notice]);
+
+  const activeFilterCount = [brand, model, bucket, quality].filter(Boolean).length + (search.trim() ? 1 : 0);
 
   function clearFilters() {
     setSearch('');
     setBrand('');
+    setModel('');
     setBucket('');
     setQuality('');
   }
 
   async function handleAddToCart(partId: string) {
     const result = await addToCart(partId, 1);
+
     if (!result.success) {
-      window.alert(result.error || 'Failed to add item to cart');
+      setNotice({
+        tone: 'error',
+        message: result.error || 'Failed to add item to cart. Try again.',
+      });
       setActiveCartPartId(null);
       return;
     }
 
     setActiveCartPartId(partId);
+    setNotice({
+      tone: 'success',
+      message: 'Part added to cart.',
+    });
     router.refresh();
 
     window.setTimeout(() => {
@@ -185,351 +280,181 @@ export function CatalogExplorer() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 px-4 pb-16 pt-24 sm:px-6 lg:px-8">
-      <div className="grid gap-6 rounded-[1.25rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.94),rgba(7,10,18,0.98))] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.35)] lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-4">
-          <div className="text-micro text-ct-accent">CellTech Catalog Engine</div>
-          <div className="space-y-3">
-            <h1 className="heading-display text-3xl text-ct-text sm:text-4xl lg:text-5xl">
-              Parts Explorer
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-ct-text-secondary sm:text-base">
-              Query live wholesale inventory by Golden SKU, device family, taxonomy bucket, and quality tier.
-              This surface is optimized for dense operational browsing rather than consumer merchandising.
-            </p>
-          </div>
+    <section className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-16 pt-24 sm:px-6 lg:px-12">
+      <PageHero partCount={parts.length} activeFilterCount={activeFilterCount} />
+
+      <div className="rounded-[1.25rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.94),rgba(7,10,18,0.98))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.35)] sm:p-6">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.95fr)]">
+          <SearchField
+            ref={searchInputRef}
+            value={search}
+            onChange={setSearch}
+            onClear={() => setSearch('')}
+          />
+          <FilterSelect
+            id="catalog-model"
+            label="Model"
+            placeholder="All Models"
+            value={model}
+            options={filters.models}
+            onChange={setModel}
+          />
+          <FilterSelect
+            id="catalog-bucket"
+            label="Bucket"
+            placeholder="All Buckets"
+            value={bucket}
+            options={filters.buckets}
+            onChange={setBucket}
+          />
+          <FilterSelect
+            id="catalog-quality"
+            label="Quality"
+            placeholder="All Quality"
+            value={quality}
+            options={filters.qualities}
+            onChange={setQuality}
+          />
         </div>
 
-        <div className="rounded-xl border border-ct-text-secondary/10 bg-ct-bg/70 p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="text-micro text-ct-text-secondary">Result Window</div>
-              <div className="mt-2 text-3xl font-semibold text-ct-text">{parts.length}</div>
-            </div>
-            <Badge variant="accent" className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.2em]">
-              Live From Neon
-            </Badge>
-          </div>
-          <div className="mt-4 border-t border-ct-text-secondary/10 pt-4 text-sm text-ct-text-secondary">
-            <div className="flex items-center justify-between">
-              <span>Active filters</span>
-              <span className="font-mono text-ct-text">{activeFilterCount}</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <span>Display mode</span>
-              <span className="font-mono text-ct-text">dense-grid</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-[1rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/40 p-4 lg:sticky lg:top-24">
-          <div className="flex items-center justify-between gap-3 border-b border-ct-text-secondary/10 pb-4">
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-ct-text">
-              <Filter className="h-4 w-4 text-ct-accent" />
-              Taxonomy Filters
-            </div>
-            {activeFilterCount > 0 ? (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-xs uppercase tracking-[0.16em] text-ct-text-secondary transition hover:text-ct-accent"
-              >
-                Reset
-              </button>
-            ) : null}
-          </div>
-
-          <div className="mt-5 space-y-6">
-            <FilterSection
-              title="Brand"
-              options={filters.brands}
-              selected={brand}
-              onSelect={setBrand}
-            />
-            <FilterSection
-              title="Bucket"
-              options={filters.buckets}
-              selected={bucket}
-              onSelect={setBucket}
-            />
-            <FilterSection
-              title="Quality"
-              options={filters.qualities}
-              selected={quality}
-              onSelect={setQuality}
-            />
-          </div>
-        </aside>
-
-        <div className="space-y-4">
-          <div className="rounded-[1rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/35 p-4 sm:p-5">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-end">
-              <div className="space-y-2">
-                <div className="text-micro text-ct-text-secondary">Command Search</div>
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ct-text-secondary/60" />
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search SKU, model, bucket, or quality"
-                    className="h-14 rounded-xl border-ct-text-secondary/10 bg-ct-bg/70 pl-11 pr-14 text-sm sm:text-base"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md border border-ct-text-secondary/10 bg-ct-bg-secondary/70 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ct-text-secondary">
-                    cmd
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 rounded-xl border border-ct-text-secondary/10 bg-ct-bg/50 p-3 text-sm">
-                <div>
-                  <div className="text-micro text-ct-text-secondary">Models</div>
-                  <div className="mt-1 text-lg font-semibold text-ct-text">{filters.models.length}</div>
-                </div>
-                <div>
-                  <div className="text-micro text-ct-text-secondary">Buckets</div>
-                  <div className="mt-1 text-lg font-semibold text-ct-text">{filters.buckets.length}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {error ? (
-            <div className="rounded-[1rem] border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
-              {error}
-            </div>
-          ) : null}
-
-          <div className="overflow-hidden rounded-[1rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/30">
-            <div className="flex items-center justify-between border-b border-ct-text-secondary/10 px-4 py-3">
-              <div className="flex items-center gap-2 text-sm text-ct-text-secondary">
-                <Package2 className="h-4 w-4 text-ct-accent" />
-                <span>
-                  <span className="font-semibold text-ct-text">{parts.length}</span> matching parts
-                </span>
-              </div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-ct-text-secondary">
-                stock-first ordering
-              </div>
-            </div>
-
-            <div className="hidden border-b border-ct-text-secondary/10 bg-ct-bg/60 px-4 py-3 lg:grid lg:grid-cols-[170px_minmax(0,2.3fr)_130px_120px_120px_170px] lg:gap-4">
-              <HeaderCell label="Golden SKU" />
-              <HeaderCell label="Part" />
-              <HeaderCell label="Quality" />
-              <HeaderCell label="Price" />
-              <HeaderCell label="Stock" />
-              <HeaderCell label="Action" />
-            </div>
-
-            {loading ? (
-              <div className="space-y-3 p-4">
-                {[0, 1, 2, 3, 4].map((item) => (
-                  <div
-                    key={item}
-                    className="h-28 rounded-xl border border-ct-text-secondary/10 bg-ct-bg/50 animate-pulse"
+        <div className="mt-5 border-t border-ct-text-secondary/10 pt-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-3">
+              <div className="text-micro text-ct-text-secondary">Brands</div>
+              <div className="flex flex-wrap gap-2">
+                <FilterChip
+                  active={brand === ''}
+                  label="All Brands"
+                  count={totalBrandCount}
+                  onClick={() => setBrand('')}
+                />
+                {filters.brands.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    active={brand === option.value}
+                    label={option.label}
+                    count={option.count}
+                    onClick={() => setBrand(brand === option.value ? '' : option.value)}
                   />
                 ))}
               </div>
-            ) : parts.length === 0 ? (
-              <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-                <Package2 className="h-10 w-10 text-ct-text-secondary/35" />
-                <div className="text-lg font-semibold text-ct-text">No catalog rows matched</div>
-                <p className="max-w-md text-sm text-ct-text-secondary">
-                  Clear one or more filters and broaden the search terms to inspect the seeded inventory.
-                </p>
-                <Button variant="outline" className="rounded-md" onClick={clearFilters}>
-                  Clear Filters
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 lg:max-w-[22rem] lg:justify-end">
+              <Badge variant="accent" className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
+                Live Wholesale Inventory
+              </Badge>
+              {activeFilterCount > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-md border border-ct-text-secondary/10 uppercase tracking-[0.16em]"
+                  onClick={clearFilters}
+                >
+                  Reset Filters
                 </Button>
-              </div>
-            ) : (
-              <div className="divide-y divide-ct-text-secondary/10">
-                {parts.map((part) => {
-                  const compatibilityPreview = part.compatibilities.slice(0, 3);
-                  const remainingCompatibilities = part.compatibilities.length - compatibilityPreview.length;
-                  const inCart = activeCartPartId === part.id;
-
-                  return (
-                    <article key={part.id} className="px-4 py-4 transition-colors hover:bg-ct-bg/35">
-                      <div className="hidden items-center gap-4 lg:grid lg:grid-cols-[170px_minmax(0,2.3fr)_130px_120px_120px_170px]">
-                        <div>
-                          <div className="text-micro text-ct-text-secondary">Golden SKU</div>
-                          <div className="mt-2 font-mono text-sm text-ct-text">{part.sku}</div>
-                          <div className="mt-2 text-xs text-ct-text-secondary">{part.brand}</div>
-                        </div>
-
-                        <div className="min-w-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <h2 className="truncate text-sm font-semibold uppercase tracking-[0.06em] text-ct-text">
-                                {part.name}
-                              </h2>
-                              <p className="mt-2 text-sm text-ct-text-secondary">
-                                {part.partType.bucket.name} · {part.primaryDeviceLabel}
-                                {part.supplier ? ` · ${part.supplier}` : ''}
-                              </p>
-                            </div>
-                            <div className="hidden text-right xl:block">
-                              <div className="text-micro text-ct-text-secondary">Fitments</div>
-                              <div className="mt-2 font-mono text-sm text-ct-text">{part.compatibilities.length}</div>
-                            </div>
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {compatibilityPreview.map((compatibility) => (
-                              <span
-                                key={compatibility.id}
-                                className="rounded-md border border-ct-text-secondary/10 bg-ct-bg/60 px-2 py-1 text-xs text-ct-text-secondary"
-                              >
-                                {compatibility.phone.label}
-                              </span>
-                            ))}
-                            {remainingCompatibilities > 0 ? (
-                              <span className="rounded-md border border-ct-text-secondary/10 bg-ct-bg/60 px-2 py-1 text-xs text-ct-accent">
-                                +{remainingCompatibilities} more
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <div>
-                          <Badge variant={qualityVariant(part.quality.name)} className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
-                            {part.quality.name}
-                          </Badge>
-                        </div>
-
-                        <div>
-                          <div className="text-micro text-ct-text-secondary">Unit</div>
-                          <div className="mt-2 text-lg font-semibold text-ct-text">{formatCurrency(part.price)}</div>
-                        </div>
-
-                        <div>
-                          <div className="text-micro text-ct-text-secondary">Available</div>
-                          <div className="mt-2 font-mono text-lg text-ct-text">{part.stock}</div>
-                          <div className={`mt-1 text-xs ${part.stock > 0 ? 'text-ct-accent' : 'text-red-400'}`}>
-                            {part.stock > 0 ? 'ready to allocate' : 'out of stock'}
-                          </div>
-                        </div>
-
-                        <div>
-                          <Button
-                            type="button"
-                            variant={part.stock > 0 ? 'primary' : 'secondary'}
-                            className="w-full rounded-md uppercase tracking-[0.14em]"
-                            disabled={part.stock === 0}
-                            onClick={() => handleAddToCart(part.id)}
-                          >
-                            {inCart ? 'Queued' : 'Add to Cart'}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4 lg:hidden">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="text-micro text-ct-text-secondary">Golden SKU</div>
-                            <div className="mt-2 font-mono text-sm text-ct-text">{part.sku}</div>
-                          </div>
-                          <Badge variant={qualityVariant(part.quality.name)} className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
-                            {part.quality.name}
-                          </Badge>
-                        </div>
-
-                        <div>
-                          <h2 className="text-sm font-semibold uppercase tracking-[0.06em] text-ct-text">{part.name}</h2>
-                          <p className="mt-2 text-sm text-ct-text-secondary">
-                            {part.partType.bucket.name} · {part.primaryDeviceLabel}
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <MetricCard label="Price" value={formatCurrency(part.price)} />
-                          <MetricCard label="Stock" value={String(part.stock)} accent={part.stock > 0} />
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          {compatibilityPreview.map((compatibility) => (
-                            <span
-                              key={compatibility.id}
-                              className="rounded-md border border-ct-text-secondary/10 bg-ct-bg/60 px-2 py-1 text-xs text-ct-text-secondary"
-                            >
-                              {compatibility.phone.label}
-                            </span>
-                          ))}
-                          {remainingCompatibilities > 0 ? (
-                            <span className="rounded-md border border-ct-text-secondary/10 bg-ct-bg/60 px-2 py-1 text-xs text-ct-accent">
-                              +{remainingCompatibilities} more
-                            </span>
-                          ) : null}
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant={part.stock > 0 ? 'primary' : 'secondary'}
-                          className="w-full rounded-md uppercase tracking-[0.14em]"
-                          disabled={part.stock === 0}
-                          onClick={() => handleAddToCart(part.id)}
-                        >
-                          {inCart ? 'Queued' : 'Add to Cart'}
-                        </Button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
+              ) : null}
+            </div>
           </div>
+
+          {activeFilterCount > 0 ? (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-micro text-ct-text-secondary">Active</span>
+              {search.trim() ? (
+                <ActiveFilter label={`Search: ${search.trim()}`} onClear={() => setSearch('')} />
+              ) : null}
+              {brand ? <ActiveFilter label={`Brand: ${brand}`} onClear={() => setBrand('')} /> : null}
+              {model ? <ActiveFilter label={`Model: ${model}`} onClear={() => setModel('')} /> : null}
+              {bucket ? <ActiveFilter label={`Bucket: ${bucket}`} onClear={() => setBucket('')} /> : null}
+              {quality ? <ActiveFilter label={`Quality: ${quality}`} onClear={() => setQuality('')} /> : null}
+            </div>
+          ) : null}
         </div>
       </div>
+
+      <div aria-live="polite" className="min-h-0">
+        {notice ? <InlineNotice notice={notice} /> : null}
+      </div>
+
+      {error ? (
+        <ErrorState message={error} onRetry={() => setRequestVersion((current) => current + 1)} />
+      ) : (
+        <div className="rounded-[1.25rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/30">
+          <div className="flex flex-col gap-3 border-b border-ct-text-secondary/10 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-2">
+              <div className="text-micro text-ct-text-secondary">Results</div>
+              <h2 className="text-2xl font-semibold text-ct-text text-pretty sm:text-3xl">
+                Matching Inventory
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-ct-text-secondary">
+                Browse wholesale-ready parts, validate fitment, and add inventory to the cart without
+                leaving the catalog.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
+                {parts.length} Parts
+              </Badge>
+              <Badge variant="outline" className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
+                Stock-First Ordering
+              </Badge>
+            </div>
+          </div>
+
+          {loading ? (
+            <LoadingGrid />
+          ) : parts.length === 0 ? (
+            <EmptyState onClear={clearFilters} />
+          ) : (
+            <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-2 xl:grid-cols-3">
+              {parts.map((part) => (
+                <ResultCard
+                  key={part.id}
+                  part={part}
+                  inCart={activeCartPartId === part.id}
+                  onAddToCart={handleAddToCart}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }
 
-function FilterSection({
-  title,
-  options,
-  selected,
-  onSelect,
+function PageHero({
+  partCount,
+  activeFilterCount,
 }: {
-  title: string;
-  options: FacetOption[];
-  selected: string;
-  onSelect: (value: string) => void;
+  partCount: number;
+  activeFilterCount: number;
 }) {
   return (
-    <section>
-      <div className="mb-3 text-micro text-ct-text-secondary">{title}</div>
-      <div className="space-y-2">
-        {options.map((option) => {
-          const active = option.value === selected;
-
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onSelect(active ? '' : option.value)}
-              className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition ${
-                active
-                  ? 'border-ct-accent bg-ct-accent/10 text-ct-text shadow-glow'
-                  : 'border-ct-text-secondary/10 bg-ct-bg/45 text-ct-text-secondary hover:border-ct-text-secondary/30 hover:text-ct-text'
-              }`}
-            >
-              <span>{option.label}</span>
-              <span className="font-mono text-xs">{option.count}</span>
-            </button>
-          );
-        })}
+    <header className="space-y-6 text-center">
+      <div className="space-y-3">
+        <p className="text-micro text-ct-accent">Wholesale Operations</p>
+        <h1 className="heading-display text-4xl text-ct-text text-pretty sm:text-5xl lg:text-6xl">
+          PARTS <span className="text-ct-accent">CATALOG</span>
+        </h1>
+        <p className="mx-auto max-w-3xl text-sm leading-7 text-ct-text-secondary sm:text-base">
+          Search live inventory by SKU, model, and part family, then move directly into quote and cart
+          workflows without losing fitment context.
+        </p>
       </div>
-    </section>
+
+      <div className="mx-auto grid max-w-3xl gap-3 sm:grid-cols-3">
+        <HeroMetric label="Available Parts" value={String(partCount)} />
+        <HeroMetric label="Active Filters" value={String(activeFilterCount)} />
+        <HeroMetric label="Source" value="Neon + Prisma" accent />
+      </div>
+    </header>
   );
 }
 
-function HeaderCell({ label }: { label: string }) {
-  return <div className="text-micro text-ct-text-secondary">{label}</div>;
-}
-
-function MetricCard({
+function HeroMetric({
   label,
   value,
   accent = false,
@@ -539,9 +464,325 @@ function MetricCard({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-ct-text-secondary/10 bg-ct-bg/55 px-3 py-3">
+    <div className="rounded-[1rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/30 px-4 py-4 text-left">
       <div className="text-micro text-ct-text-secondary">{label}</div>
-      <div className={`mt-2 text-base font-semibold ${accent ? 'text-ct-accent' : 'text-ct-text'}`}>{value}</div>
+      <div className={`mt-2 text-lg font-semibold ${accent ? 'text-ct-accent' : 'text-ct-text'}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+const SearchField = forwardRef<HTMLInputElement, {
+  value: string;
+  onChange: (value: string) => void;
+  onClear: () => void;
+}>(function SearchField(
+  {
+    value,
+    onChange,
+    onClear,
+  },
+  ref
+) {
+  return (
+    <label htmlFor="catalog-search" className="block space-y-2">
+      <div className="text-micro text-ct-text-secondary">Search Inventory</div>
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ct-text-secondary/60" />
+        <Input
+          ref={ref}
+          id="catalog-search"
+          name="search"
+          type="search"
+          inputMode="search"
+          autoComplete="off"
+          spellCheck={false}
+          aria-label="Search wholesale parts inventory"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="Search SKU, model, or part type…"
+          className="h-14 rounded-xl border-ct-text-secondary/10 bg-ct-bg/70 pl-11 pr-24 text-sm sm:text-base"
+        />
+        <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
+          {value ? (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={onClear}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ct-text-secondary/10 bg-ct-bg-secondary/80 text-ct-text-secondary transition-[border-color,color,background-color] hover:border-ct-text-secondary/30 hover:text-ct-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ct-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ct-bg"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : null}
+          <kbd className="hidden rounded-md border border-ct-text-secondary/10 bg-ct-bg-secondary/70 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ct-text-secondary sm:inline-flex">
+            /
+          </kbd>
+        </div>
+      </div>
+    </label>
+  );
+});
+
+function FilterSelect({
+  id,
+  label,
+  placeholder,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  value: string;
+  options: FacetOption[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label htmlFor={id} className="block space-y-2">
+      <div className="text-micro text-ct-text-secondary">{label}</div>
+      <select
+        id={id}
+        name={id}
+        value={value}
+        aria-label={label}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-14 w-full rounded-xl border border-ct-text-secondary/10 bg-ct-bg/70 px-4 text-sm text-ct-text transition-[border-color,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ct-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ct-bg"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label} ({option.count})
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function FilterChip({
+  active,
+  label,
+  count,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  count: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition-[border-color,color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ct-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ct-bg ${
+        active
+          ? 'border-ct-accent bg-ct-accent/10 text-ct-text shadow-[0_0_20px_rgba(0,229,192,0.12)]'
+          : 'border-ct-text-secondary/10 bg-ct-bg/45 text-ct-text-secondary hover:border-ct-text-secondary/30 hover:text-ct-text'
+      }`}
+    >
+      <span>{label}</span>
+      <span className="font-mono text-[11px] text-current/80">{count}</span>
+    </button>
+  );
+}
+
+function ActiveFilter({
+  label,
+  onClear,
+}: {
+  label: string;
+  onClear: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      className="inline-flex items-center gap-2 rounded-full border border-ct-accent/20 bg-ct-accent/10 px-3 py-1.5 text-xs uppercase tracking-[0.16em] text-ct-accent transition-[border-color,color,background-color] hover:border-ct-accent/40 hover:text-ct-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ct-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ct-bg"
+    >
+      <span>{label}</span>
+      <X className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  );
+}
+
+function InlineNotice({ notice }: { notice: NoticeState }) {
+  const toneClasses =
+    notice.tone === 'success'
+      ? 'border-ct-accent/20 bg-ct-accent/10 text-ct-text'
+      : 'border-red-500/20 bg-red-500/10 text-red-200';
+
+  return (
+    <div className={`flex items-center gap-3 rounded-[1rem] border px-4 py-3 text-sm ${toneClasses}`}>
+      {notice.tone === 'success' ? (
+        <Sparkles className="h-4 w-4 text-ct-accent" aria-hidden="true" />
+      ) : (
+        <CircleAlert className="h-4 w-4 text-red-300" aria-hidden="true" />
+      )}
+      <span>{notice.message}</span>
+    </div>
+  );
+}
+
+function ErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="rounded-[1.25rem] border border-red-500/20 bg-red-500/5 p-6 sm:p-8">
+      <div className="flex items-start gap-4">
+        <CircleAlert className="mt-0.5 h-5 w-5 text-red-300" aria-hidden="true" />
+        <div className="space-y-3">
+          <div>
+            <div className="text-lg font-semibold text-red-200">Error Loading Catalog</div>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-red-100/85">
+              {message} Refresh the catalog and try again.
+            </p>
+          </div>
+          <Button type="button" variant="outline" className="rounded-md" onClick={onRetry}>
+            Retry Request
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 px-6 py-12 text-center">
+      <div className="rounded-full border border-ct-text-secondary/10 bg-ct-bg/70 p-4">
+        <Package2 className="h-8 w-8 text-ct-text-secondary/40" aria-hidden="true" />
+      </div>
+      <div className="space-y-2">
+        <div className="text-xl font-semibold text-ct-text">No matching parts found</div>
+        <p className="max-w-md text-sm leading-6 text-ct-text-secondary">
+          Broaden the search terms or clear one or more filters to inspect the seeded wholesale
+          inventory.
+        </p>
+      </div>
+      <Button type="button" variant="outline" className="rounded-md" onClick={onClear}>
+        Clear Filters
+      </Button>
+    </div>
+  );
+}
+
+function LoadingGrid() {
+  return (
+    <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-2 xl:grid-cols-3">
+      {[0, 1, 2, 3, 4, 5].map((item) => (
+        <div
+          key={item}
+          className="h-[320px] rounded-[1rem] border border-ct-text-secondary/10 bg-ct-bg/50 animate-pulse"
+        />
+      ))}
+    </div>
+  );
+}
+
+function ResultCard({
+  part,
+  inCart,
+  onAddToCart,
+}: {
+  part: PartRecord;
+  inCart: boolean;
+  onAddToCart: (partId: string) => Promise<void>;
+}) {
+  const compatibilityPreview = part.compatibilities.slice(0, 3);
+  const remainingCompatibilities = part.compatibilities.length - compatibilityPreview.length;
+
+  return (
+    <article className="flex h-full flex-col rounded-[1rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.72),rgba(7,10,18,0.92))] p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-ct-accent/25 hover:shadow-[0_18px_35px_rgba(0,0,0,0.28)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-micro text-ct-text-secondary">Golden SKU</div>
+          <div className="mt-2 truncate font-mono text-sm text-ct-text">{part.sku}</div>
+        </div>
+        <Badge
+          variant={part.stock > 0 ? 'accent' : 'destructive'}
+          className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]"
+        >
+          {part.stock > 0 ? `${part.stock} In Stock` : 'Out of Stock'}
+        </Badge>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={qualityVariant(part.quality.name)} className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
+            {part.quality.name}
+          </Badge>
+          <Badge variant="outline" className="rounded-md px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
+            {part.brand}
+          </Badge>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-ct-text text-pretty">{part.partType.name}</h3>
+          <p className="text-sm leading-6 text-ct-text-secondary">{part.primaryDeviceLabel}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 rounded-[0.875rem] border border-ct-text-secondary/10 bg-ct-bg/45 p-4 sm:grid-cols-2">
+        <MetaRow label="Bucket" value={part.partType.bucket.name} />
+        <MetaRow label="Supplier" value={part.supplier || 'CellTech Stock'} />
+        <MetaRow label="Model" value={part.model} />
+        <MetaRow label="Fitments" value={String(part.compatibilities.length)} />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {compatibilityPreview.map((compatibility) => (
+          <span
+            key={compatibility.id}
+            className="rounded-md border border-ct-text-secondary/10 bg-ct-bg/55 px-2.5 py-1 text-xs text-ct-text-secondary"
+          >
+            {compatibility.phone.label}
+          </span>
+        ))}
+        {remainingCompatibilities > 0 ? (
+          <span className="rounded-md border border-ct-accent/20 bg-ct-accent/10 px-2.5 py-1 text-xs text-ct-accent">
+            +{remainingCompatibilities} more
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-auto flex items-end justify-between gap-4 border-t border-ct-text-secondary/10 pt-5">
+        <div>
+          <div className="text-micro text-ct-text-secondary">Wholesale Price</div>
+          <div className="mt-2 text-2xl font-semibold text-ct-text">{formatCurrency(part.price)}</div>
+        </div>
+
+        <Button
+          type="button"
+          variant={part.stock > 0 ? 'primary' : 'secondary'}
+          className="rounded-md px-5 uppercase tracking-[0.16em]"
+          disabled={part.stock === 0}
+          onClick={() => onAddToCart(part.id)}
+        >
+          {inCart ? 'Queued' : 'Add to Cart'}
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+function MetaRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="text-micro text-ct-text-secondary">{label}</div>
+      <div className="mt-2 truncate text-sm text-ct-text">{value}</div>
     </div>
   );
 }
