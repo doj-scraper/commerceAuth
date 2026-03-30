@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
+import { MetricTile } from '@/components/ui/MetricTile';
+import { SectionIntro } from '@/components/ui/SectionIntro';
 
 export const metadata = {
   title: 'Why CellTech | Enterprise-Grade Cell Phone Parts',
@@ -88,26 +90,22 @@ export default function FeaturesPage() {
     <div className="pb-20 pt-24">
       <section className="px-6 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:items-end">
-          <div className="space-y-5">
-            <div className="text-micro text-ct-accent">CellTech Capabilities</div>
-            <h1 className="heading-display max-w-4xl text-4xl text-ct-text sm:text-5xl lg:text-6xl">
-              BUILT FOR <span className="text-ct-accent">HIGH-THROUGHPUT</span> SERVICE TEAMS
-            </h1>
-            <p className="max-w-2xl text-sm leading-7 text-ct-text-secondary sm:text-base">
-              CellTech is designed for repair operations that need better sourcing velocity, tighter
-              inventory confidence, and a UI that behaves like an operational tool rather than a generic
-              wholesale storefront.
-            </p>
-          </div>
+          <SectionIntro
+            eyebrow="CellTech Capabilities"
+            title={
+              <>
+                BUILT FOR <span className="text-ct-accent">HIGH-THROUGHPUT</span> SERVICE TEAMS
+              </>
+            }
+            description="CellTech is designed for repair operations that need better sourcing velocity, tighter inventory confidence, and a UI that behaves like an operational tool rather than a generic wholesale storefront."
+            className="animate-rise-in"
+          />
 
-          <div className="rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.75),rgba(7,10,18,0.95))] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
+          <div className="animate-rise-in animation-delay-150 rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.75),rgba(7,10,18,0.95))] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
             <div className="text-micro text-ct-text-secondary">Operating Envelope</div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {metrics.map((metric) => (
-                <div key={metric.label} className="rounded-[1rem] border border-ct-text-secondary/10 bg-ct-bg/50 p-4">
-                  <div className="text-micro text-ct-text-secondary">{metric.label}</div>
-                  <div className="mt-2 text-2xl font-semibold text-ct-text">{metric.value}</div>
-                </div>
+                <MetricTile key={metric.label} label={metric.label} value={metric.value} className="bg-ct-bg/50" />
               ))}
             </div>
           </div>
@@ -116,10 +114,12 @@ export default function FeaturesPage() {
 
       <section className="mt-12 px-6 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-3">
-          {coreCapabilities.map((capability) => (
+          {coreCapabilities.map((capability, index) => (
             <article
               key={capability.title}
-              className="group rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.72),rgba(7,10,18,0.92))] p-7 transition-[border-color,transform,box-shadow] hover:-translate-y-1 hover:border-ct-accent/20 hover:shadow-[0_18px_40px_rgba(0,0,0,0.28)]"
+              className={`animate-rise-in group rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.72),rgba(7,10,18,0.92))] p-6 sm:p-7 transition-[border-color,transform,box-shadow] hover:-translate-y-1 hover:border-ct-accent/20 hover:shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${
+                index === 0 ? 'animation-delay-100' : index === 1 ? 'animation-delay-200' : 'animation-delay-300'
+              }`}
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="text-micro text-ct-accent">{capability.eyebrow}</div>
@@ -136,20 +136,29 @@ export default function FeaturesPage() {
 
       <section className="mt-14 px-6 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-10 rounded-[1.75rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/25 p-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:p-8">
-          <div className="space-y-4">
-            <div className="text-micro text-ct-accent">Support Signals</div>
-            <h2 className="heading-display text-3xl text-ct-text sm:text-4xl">
-              EVERYTHING A MODERN <span className="text-ct-accent">BUYING TEAM</span> EXPECTS
-            </h2>
-            <p className="max-w-md text-sm leading-7 text-ct-text-secondary">
-              The goal is not decorative feature density. It is dependable procurement, clearer order-state
-              awareness, and fewer bottlenecks between search, selection, and shipment.
-            </p>
-          </div>
+          <SectionIntro
+            eyebrow="Support Signals"
+            title={
+              <>
+                EVERYTHING A MODERN <span className="text-ct-accent">BUYING TEAM</span> EXPECTS
+              </>
+            }
+            description="The goal is not decorative feature density. It is dependable procurement, clearer order-state awareness, and fewer bottlenecks between search, selection, and shipment."
+            className="animate-rise-in"
+          />
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {supportingSignals.map((signal) => (
-              <div key={signal.title} className="rounded-[1.15rem] border border-ct-text-secondary/10 bg-ct-bg/50 p-5">
+            {supportingSignals.map((signal, index) => (
+              <div
+                key={signal.title}
+                className={`animate-rise-in rounded-[1.15rem] border border-ct-text-secondary/10 bg-ct-bg/50 p-5 ${
+                  index % 3 === 0
+                    ? 'animation-delay-100'
+                    : index % 3 === 1
+                      ? 'animation-delay-200'
+                      : 'animation-delay-300'
+                }`}
+              >
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-ct-accent/20 bg-ct-accent/10">
                   <signal.icon className="h-4.5 w-4.5 text-ct-accent" />
                 </div>
@@ -162,7 +171,7 @@ export default function FeaturesPage() {
       </section>
 
       <section className="mt-14 px-6 lg:px-12">
-        <div className="mx-auto max-w-5xl rounded-[1.9rem] border border-ct-accent/15 bg-[linear-gradient(180deg,rgba(17,23,37,0.88),rgba(7,10,18,0.98))] p-8 text-center shadow-[0_28px_60px_rgba(0,0,0,0.34)] sm:p-10">
+        <div className="animate-rise-in animation-delay-150 mx-auto max-w-5xl rounded-[1.9rem] border border-ct-accent/15 bg-[linear-gradient(180deg,rgba(17,23,37,0.88),rgba(7,10,18,0.98))] p-8 text-center shadow-[0_28px_60px_rgba(0,0,0,0.34)] sm:p-10">
           <div className="text-micro text-ct-accent">Next Step</div>
           <h2 className="mt-4 heading-display text-3xl text-ct-text sm:text-4xl">
             READY TO MOVE INTO THE <span className="text-ct-accent">CATALOG RAIL</span>?

@@ -28,9 +28,22 @@ export default function RootLayout({
           '--font-ibm-plex-mono': 'ui-monospace, SFMono-Regular, monospace',
         } as CSSProperties
       }
-    >
+      >
       <body className="bg-ct-bg text-ct-text font-inter antialiased flex flex-col min-h-screen">
-        <ClerkProvider>
+        <ClerkProvider
+          appearance={{
+            variables: {
+              colorPrimary: '#00E5C0',
+              colorBackground: '#070A12',
+              colorText: '#F2F5FA',
+              colorInputBackground: '#0C101A',
+              colorInputText: '#F2F5FA',
+              colorBorder: 'rgba(167, 177, 198, 0.14)',
+              colorDanger: '#F87171',
+              borderRadius: '1rem',
+            },
+          }}
+        >
           <Header />
           <main className="flex-1">
             {children}

@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 
 import { getUserOrders } from '@/app/actions/order.actions';
 import { Button } from '@/components/ui/Button';
+import { MetricTile } from '@/components/ui/MetricTile';
+import { SectionIntro } from '@/components/ui/SectionIntro';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,21 +48,21 @@ export default async function OrdersPage() {
     <div className="px-6 pb-16 pt-24 lg:px-12">
       <div className="mx-auto max-w-7xl space-y-10">
         <header className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-end">
-          <div className="space-y-4">
-            <div className="text-micro text-ct-accent">Order Rail</div>
-            <h1 className="heading-display text-4xl text-ct-text sm:text-5xl lg:text-6xl">
-              ACCOUNT <span className="text-ct-accent">LEDGER</span>
-            </h1>
-            <p className="max-w-2xl text-sm leading-7 text-ct-text-secondary sm:text-base">
-              Track settled orders, inspect line items, and keep purchasing history visible without leaving
-              the sourcing system.
-            </p>
-          </div>
+          <SectionIntro
+            eyebrow="Order Rail"
+            title={
+              <>
+                ACCOUNT <span className="text-ct-accent">LEDGER</span>
+              </>
+            }
+            description="Track settled orders, inspect line items, and keep purchasing history visible without leaving the sourcing system."
+            className="animate-rise-in"
+          />
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <MetricCard label="Orders" value={String(totalOrders)} />
-            <MetricCard label="Units" value={String(totalUnits)} />
-            <MetricCard label="Settled" value={formatMoney(totalRevenue)} accent />
+            <MetricTile label="Orders" value={String(totalOrders)} className="animate-rise-in animation-delay-100" />
+            <MetricTile label="Units" value={String(totalUnits)} className="animate-rise-in animation-delay-200" />
+            <MetricTile label="Settled" value={formatMoney(totalRevenue)} accent className="animate-rise-in animation-delay-300" />
           </div>
         </header>
 
@@ -85,7 +87,7 @@ export default async function OrdersPage() {
           </div>
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            <aside className="h-fit rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.72),rgba(7,10,18,0.92))] p-6 xl:sticky xl:top-24">
+            <aside className="animate-rise-in h-fit rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.72),rgba(7,10,18,0.92))] p-6 xl:sticky xl:top-24">
               <div className="text-micro text-ct-accent">Latest Activity</div>
               <div className="mt-5 space-y-5">
                 <div>
@@ -117,10 +119,12 @@ export default async function OrdersPage() {
             </aside>
 
             <div className="space-y-5">
-              {orders.map((order) => (
+              {orders.map((order, index) => (
                 <article
                   key={order.id}
-                  className="overflow-hidden rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.7),rgba(7,10,18,0.94))]"
+                  className={`animate-rise-in overflow-hidden rounded-[1.5rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.7),rgba(7,10,18,0.94))] ${
+                    index === 0 ? 'animation-delay-100' : index === 1 ? 'animation-delay-200' : 'animation-delay-300'
+                  }`}
                 >
                   <div className="grid gap-4 border-b border-ct-text-secondary/10 bg-ct-bg/50 p-5 sm:grid-cols-2 xl:grid-cols-4">
                     <LedgerCell label="Reference" value={order.id.slice(-8).toUpperCase()} mono />
@@ -181,25 +185,6 @@ export default async function OrdersPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-[1.1rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/30 p-4">
-      <div className="text-micro text-ct-text-secondary">{label}</div>
-      <div className={`mt-2 text-2xl font-semibold ${accent ? 'text-ct-accent' : 'text-ct-text'}`}>
-        {value}
       </div>
     </div>
   );

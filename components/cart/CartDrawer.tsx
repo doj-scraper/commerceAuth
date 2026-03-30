@@ -187,8 +187,8 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         aria-label="Close cart"
       />
 
-      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-ct-text-secondary/10 bg-ct-bg-secondary shadow-2xl">
-        <div className="flex items-center justify-between border-b border-ct-text-secondary/10 p-6">
+      <aside className="animate-slide-in-soft fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-ct-text-secondary/10 bg-ct-bg-secondary shadow-2xl">
+        <div className="flex items-center justify-between border-b border-ct-text-secondary/10 p-4 sm:p-6">
           <div>
             <div className="text-micro text-ct-accent">Live Cart</div>
             <h2 className="mt-2 text-xl font-semibold text-ct-text">Active Allocation</h2>
@@ -198,7 +198,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-ct-accent" />
@@ -215,10 +215,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {cartItems.map((item) => (
+              {cartItems.map((item, index) => (
                 <article
                   key={item.id}
-                  className="rounded-xl border border-ct-text-secondary/10 bg-ct-bg/60 p-4"
+                  className={`animate-rise-in rounded-xl border border-ct-text-secondary/10 bg-ct-bg/60 p-4 ${
+                    index % 3 === 0 ? 'animation-delay-100' : index % 3 === 1 ? 'animation-delay-200' : 'animation-delay-300'
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -276,7 +278,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         </div>
 
         {cartItems.length > 0 ? (
-          <div className="border-t border-ct-text-secondary/10 p-6">
+          <div className="border-t border-ct-text-secondary/10 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:p-6 sm:pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
             <div className="flex items-center justify-between">
               <span className="text-sm text-ct-text-secondary">Subtotal</span>
               <span className="font-mono text-xl font-semibold text-ct-text">

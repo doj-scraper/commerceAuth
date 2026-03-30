@@ -55,7 +55,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden px-6 lg:px-12">
+    <div className="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden px-4 sm:px-6 lg:px-12">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -left-24 top-[14%] h-[34rem] w-[34rem] rounded-full bg-ct-accent/7 blur-[150px]" />
         <div className="absolute -left-12 bottom-[12%] h-[20rem] w-[20rem] rounded-full bg-ct-accent/8 blur-[120px]" />
@@ -78,7 +78,7 @@ export default function LandingPage() {
         </FloatingElement>
       </div>
 
-      <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-10 py-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-8 py-6 sm:py-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
         <div
           className={`hidden lg:block transition-[opacity,transform] duration-700 ease-out ${
             isReady ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'
@@ -115,7 +115,7 @@ export default function LandingPage() {
         >
           <HeroBadge>Search-First Wholesale Entry</HeroBadge>
 
-          <div className="mt-5 space-y-4">
+          <div className="mt-4 space-y-4 sm:mt-5">
             <div className="text-micro text-ct-text-secondary">CellTech Inventory Rail</div>
             <h1 className="heading-display text-4xl leading-[0.9] text-ct-text sm:text-5xl lg:text-[4.7rem]">
               WHOLESALE MOBILE <span className="text-ct-accent">COMPONENTS</span>
@@ -126,7 +126,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="mx-auto mt-8 max-w-2xl lg:mx-0">
+          <div className="mx-auto mt-6 max-w-2xl lg:mx-0 lg:mt-8">
             <form onSubmit={handleSearch} className="relative group">
               <div className="absolute inset-0 rounded-[1.75rem] bg-ct-accent/20 blur-xl opacity-0 transition-opacity group-focus-within:opacity-100" />
 
@@ -164,15 +164,23 @@ export default function LandingPage() {
               </div>
             </form>
 
-            <p className="mt-3 text-xs text-ct-text-secondary/60">
+            <p className="mt-3 text-xs leading-5 text-ct-text-secondary/60">
               Try: &quot;iPhone 15 Pro Battery&quot;, &quot;Galaxy S24 Screen&quot;, or SKU
               &quot; AI-IP15PR-1A-OR&quot;
             </p>
           </div>
 
-          <div className="mt-8 rounded-[1.4rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/28 p-4 sm:p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap items-center justify-center gap-3 text-xs uppercase tracking-[0.18em] text-ct-text-secondary lg:justify-start sm:gap-4">
+          <div className="mt-6 rounded-[1.4rem] border border-ct-text-secondary/10 bg-ct-bg-secondary/28 p-4 sm:mt-8 sm:p-5">
+            <div className="lg:hidden">
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                <MobileSignalPill label="Inventory" value="Live" />
+                <MobileSignalPill label="Fulfillment" value="Next-Day" />
+                <MobileSignalPill label="Quality" value="Verified OEM" accent />
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-4 lg:mt-0 lg:flex-row lg:items-center lg:justify-between">
+              <div className="-mx-1 flex items-center gap-3 overflow-x-auto px-1 text-xs uppercase tracking-[0.18em] text-ct-text-secondary sm:gap-4 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
                 <Link href="/catalog" className="transition-colors hover:text-ct-accent">
                   Browse Catalog
                 </Link>
@@ -190,7 +198,7 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-ct-text-secondary/70 lg:justify-end sm:gap-4">
+              <div className="-mx-1 flex items-center gap-3 overflow-x-auto px-1 text-xs text-ct-text-secondary/70 sm:gap-4 lg:mx-0 lg:flex-wrap lg:justify-end lg:overflow-visible lg:px-0">
                 <TrustPill icon={ShieldCheck} label="Verified OEM" />
                 <TrustPill icon={Database} label="Real-time Stock" />
                 <TrustPill icon={Truck} label="Next-day Shipping" />
@@ -274,5 +282,22 @@ function RailTag({ label }: { label: string }) {
     <span className="inline-flex items-center rounded-full border border-ct-text-secondary/10 bg-ct-bg-secondary/70 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-ct-text-secondary">
       {label}
     </span>
+  );
+}
+
+function MobileSignalPill({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="min-w-[9.5rem] rounded-full border border-ct-text-secondary/10 bg-ct-bg/55 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-[0.16em] text-ct-text-secondary">{label}</div>
+      <div className={`mt-1 text-sm font-semibold ${accent ? 'text-ct-accent' : 'text-ct-text'}`}>{value}</div>
+    </div>
   );
 }

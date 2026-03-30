@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
-import { SignInButton, UserButton, useAuth } from '@clerk/nextjs';
+import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
 
 import { CartDrawer } from '@/components/cart/CartDrawer';
 
@@ -29,11 +29,11 @@ export function HeaderActions({ cartItemCount }: HeaderActionsProps) {
         ) : null}
 
         {!isSignedIn ? (
-          <Link href="/catalog">
+          <SignUpButton mode="modal">
             <Button size="sm" className="rounded-full px-4 uppercase tracking-[0.12em]">
-              Open Catalog
+              Create Account
             </Button>
-          </Link>
+          </SignUpButton>
         ) : null}
 
         {isSignedIn ? (

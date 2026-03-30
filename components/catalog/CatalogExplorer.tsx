@@ -2,7 +2,7 @@
 
 import { forwardRef, startTransition, useDeferredValue, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { CircleAlert, Package2, Search, Sparkles, X } from 'lucide-react';
+import { CircleAlert, Package2, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 
 import { addToCart } from '@/app/actions/cart.actions';
 import { Badge } from '@/components/ui/Badge';
@@ -109,6 +109,7 @@ export function CatalogExplorer() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<NoticeState | null>(null);
   const [activeCartPartId, setActiveCartPartId] = useState<string | null>(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [requestVersion, setRequestVersion] = useState(0);
 
   const deferredSearch = useDeferredValue(search);
@@ -280,17 +281,46 @@ export function CatalogExplorer() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-16 pt-24 sm:px-6 lg:px-12">
+    <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-16 pt-20 sm:gap-8 sm:px-6 sm:pt-24 lg:px-12">
       <PageHero partCount={parts.length} activeFilterCount={activeFilterCount} />
 
-      <div className="rounded-[1.25rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.94),rgba(7,10,18,0.98))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.35)] sm:p-6">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.95fr)]">
+      <div className="rounded-[1.25rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.94),rgba(7,10,18,0.98))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)] sm:p-6">
+        <div className="flex items-end gap-3 lg:hidden">
+          <div className="min-w-0 flex-1">
+            <SearchField
+              ref={searchInputRef}
+              value={search}
+              onChange={setSearch}
+              onClear={() => setSearch('')}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="h-14 rounded-xl px-4 uppercase tracking-[0.14em]"
+            aria-expanded={showMobileFilters}
+            aria-controls="catalog-mobile-filters"
+            onClick={() => setShowMobileFilters((current) => !current)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+          </Button>
+        </div>
+
+        <div className="hidden lg:block">
           <SearchField
             ref={searchInputRef}
             value={search}
             onChange={setSearch}
             onClear={() => setSearch('')}
           />
+        </div>
+
+        <div
+          id="catalog-mobile-filters"
+          className={`${showMobileFilters ? 'mt-4 grid' : 'hidden'} gap-4 md:grid-cols-3 lg:mt-4 lg:grid`}
+        >
           <FilterSelect
             id="catalog-model"
             label="Model"
@@ -321,22 +351,24 @@ export function CatalogExplorer() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
               <div className="text-micro text-ct-text-secondary">Brands</div>
-              <div className="flex flex-wrap gap-2">
-                <FilterChip
-                  active={brand === ''}
-                  label="All Brands"
-                  count={totalBrandCount}
-                  onClick={() => setBrand('')}
-                />
-                {filters.brands.map((option) => (
+              <div className="-mx-1 overflow-x-auto px-1 pb-1 lg:mx-0 lg:overflow-visible lg:px-0 lg:pb-0">
+                <div className="flex min-w-max gap-2 lg:flex-wrap">
                   <FilterChip
-                    key={option.value}
-                    active={brand === option.value}
-                    label={option.label}
-                    count={option.count}
-                    onClick={() => setBrand(brand === option.value ? '' : option.value)}
+                    active={brand === ''}
+                    label="All Brands"
+                    count={totalBrandCount}
+                    onClick={() => setBrand('')}
                   />
-                ))}
+                  {filters.brands.map((option) => (
+                    <FilterChip
+                      key={option.value}
+                      active={brand === option.value}
+                      label={option.label}
+                      count={option.count}
+                      onClick={() => setBrand(brand === option.value ? '' : option.value)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -359,15 +391,17 @@ export function CatalogExplorer() {
           </div>
 
           {activeFilterCount > 0 ? (
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-micro text-ct-text-secondary">Active</span>
-              {search.trim() ? (
-                <ActiveFilter label={`Search: ${search.trim()}`} onClear={() => setSearch('')} />
-              ) : null}
-              {brand ? <ActiveFilter label={`Brand: ${brand}`} onClear={() => setBrand('')} /> : null}
-              {model ? <ActiveFilter label={`Model: ${model}`} onClear={() => setModel('')} /> : null}
-              {bucket ? <ActiveFilter label={`Bucket: ${bucket}`} onClear={() => setBucket('')} /> : null}
-              {quality ? <ActiveFilter label={`Quality: ${quality}`} onClear={() => setQuality('')} /> : null}
+            <div className="-mx-1 mt-4 overflow-x-auto px-1 pb-1 lg:mx-0 lg:overflow-visible lg:px-0 lg:pb-0">
+              <div className="flex min-w-max items-center gap-2 lg:flex-wrap">
+                <span className="text-micro text-ct-text-secondary">Active</span>
+                {search.trim() ? (
+                  <ActiveFilter label={`Search: ${search.trim()}`} onClear={() => setSearch('')} />
+                ) : null}
+                {brand ? <ActiveFilter label={`Brand: ${brand}`} onClear={() => setBrand('')} /> : null}
+                {model ? <ActiveFilter label={`Model: ${model}`} onClear={() => setModel('')} /> : null}
+                {bucket ? <ActiveFilter label={`Bucket: ${bucket}`} onClear={() => setBucket('')} /> : null}
+                {quality ? <ActiveFilter label={`Quality: ${quality}`} onClear={() => setQuality('')} /> : null}
+              </div>
             </div>
           ) : null}
         </div>
@@ -409,10 +443,11 @@ export function CatalogExplorer() {
             <EmptyState onClear={clearFilters} />
           ) : (
             <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-2 xl:grid-cols-3">
-              {parts.map((part) => (
+              {parts.map((part, index) => (
                 <ResultCard
                   key={part.id}
                   part={part}
+                  index={index}
                   inCart={activeCartPartId === part.id}
                   onAddToCart={handleAddToCart}
                 />
@@ -688,10 +723,12 @@ function LoadingGrid() {
 
 function ResultCard({
   part,
+  index,
   inCart,
   onAddToCart,
 }: {
   part: PartRecord;
+  index: number;
   inCart: boolean;
   onAddToCart: (partId: string) => Promise<void>;
 }) {
@@ -699,7 +736,11 @@ function ResultCard({
   const remainingCompatibilities = part.compatibilities.length - compatibilityPreview.length;
 
   return (
-    <article className="flex h-full flex-col rounded-[1rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.72),rgba(7,10,18,0.92))] p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-ct-accent/25 hover:shadow-[0_18px_35px_rgba(0,0,0,0.28)]">
+    <article
+      className={`animate-rise-in flex h-full flex-col rounded-[1rem] border border-ct-text-secondary/10 bg-[linear-gradient(180deg,rgba(17,23,37,0.72),rgba(7,10,18,0.92))] p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-ct-accent/25 hover:shadow-[0_18px_35px_rgba(0,0,0,0.28)] ${
+        index % 3 === 0 ? 'animation-delay-100' : index % 3 === 1 ? 'animation-delay-200' : 'animation-delay-300'
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-micro text-ct-text-secondary">Golden SKU</div>
