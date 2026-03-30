@@ -19,42 +19,50 @@ export function HeaderActions({ cartItemCount }: HeaderActionsProps) {
 
   return (
     <>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {!isSignedIn ? (
           <SignInButton mode="modal">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="rounded-full border border-ct-text-secondary/10 px-4">
               Log In
             </Button>
           </SignInButton>
         ) : null}
+
         {!isSignedIn ? (
           <Link href="/catalog">
-            <Button size="sm">Catalog</Button>
+            <Button size="sm" className="rounded-full px-4 uppercase tracking-[0.12em]">
+              Open Catalog
+            </Button>
           </Link>
         ) : null}
 
         {isSignedIn ? (
-          <Link href="/orders" className="hidden text-sm font-medium text-ct-text-secondary transition-colors hover:text-ct-accent md:block">
-            My Orders
+          <Link
+            href="/orders"
+            className="hidden rounded-full border border-ct-text-secondary/10 px-4 py-2 text-sm font-medium text-ct-text-secondary transition-[border-color,color,background-color] hover:border-ct-text-secondary/20 hover:bg-ct-bg-secondary/45 hover:text-ct-text md:block"
+          >
+            Orders
           </Link>
         ) : null}
+
         {isSignedIn ? (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="relative px-2"
+            className="relative h-10 w-10 rounded-full border border-ct-text-secondary/10 px-0"
             onClick={() => setIsCartOpen(true)}
             aria-label="Open cart"
           >
             <ShoppingCart className="h-5 w-5 text-ct-text" />
             {cartItemCount > 0 ? (
-              <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-ct-accent text-[10px] font-bold text-ct-bg">
+              <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-ct-bg bg-ct-accent px-1 text-[10px] font-bold text-ct-bg">
                 {cartItemCount > 99 ? '99+' : cartItemCount}
               </span>
             ) : null}
           </Button>
         ) : null}
+
         {isSignedIn ? <UserButton /> : null}
       </div>
 
