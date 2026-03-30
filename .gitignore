@@ -5,3 +5,13 @@ dist
 build
 .next
 .vercel
+.aider*
+.copilot/
+.crush/
+.gemini/
+.github/
+.rovodev/
+AGENTS.md
+GEMINI.md
+UI.md
+tsconfig.tsbuildinfo
