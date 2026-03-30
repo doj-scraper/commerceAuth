@@ -16,6 +16,7 @@ export default [
       '.github/**',
       'next-env.d.ts',
       'newFiles/**',
+      'USEFULUI/**',
       'prisma/prismaGeneratorClient.js',
     ],
   },
