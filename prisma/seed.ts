@@ -18,6 +18,19 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   try {
+    console.log('Clearing existing seed data...');
+    await prisma.stockLedger.deleteMany();
+    await prisma.partAlias.deleteMany();
+    await prisma.phoneCompatibility.deleteMany();
+    await prisma.partMaster.deleteMany();
+    await prisma.partQuality.deleteMany();
+    await prisma.partType.deleteMany();
+    await prisma.bucket.deleteMany();
+    await prisma.phone.deleteMany();
+    await prisma.model.deleteMany();
+    await prisma.brand.deleteMany();
+    console.log('✅ Existing seed data cleared');
+
     // ─────────────────────────────────────────────
     // 1. BRANDS
     // ─────────────────────────────────────────────

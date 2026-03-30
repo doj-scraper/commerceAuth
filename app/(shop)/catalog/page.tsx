@@ -1,6 +1,5 @@
-// app/(shop)/catalog/page.tsx
-import OmniCatalog from '../../../components/catalog/OmniCatalog';
+import { CatalogExplorer } from '@/components/catalog/CatalogExplorer';
 
 export default function CatalogPage() {
-  return <OmniCatalog />;
+  return <CatalogExplorer />;
 }
